@@ -5,7 +5,7 @@
 // Read LICENSE.txt for more information.
 
 #include "blend.h"
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 
 namespace aseprite {
@@ -156,9 +156,9 @@ PIXEL_RGBA soft_light_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const 
 }
 PIXEL_RGBA diffrence_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity){
   const PIXEL_RGBA diff_rgba{
-    static_cast<BYTE>(std::abs(lhs.r - rhs.r)),
-    static_cast<BYTE>(std::abs(lhs.g - rhs.g)),
-    static_cast<BYTE>(std::abs(lhs.b - rhs.b)),
+    static_cast<BYTE>(std::abs(int(lhs.r - rhs.r))),
+    static_cast<BYTE>(std::abs(int(lhs.g - rhs.g))),
+    static_cast<BYTE>(std::abs(int(lhs.b - rhs.b))),
     static_cast<BYTE>(rhs.a) };
   return normal_blend(lhs, diff_rgba, opacity);
 }
