@@ -174,7 +174,7 @@ Sprite load_sprite(const char* char_iter) {
 
     if ( cels.size() > 0 ) {
       assert(frame.header.duration >= 1);
-      // Now that we've parsed all of the chunks we should be 
+      // Now that we've parsed all of the chunks we should be
       // able to render the final cell.
 
       // Create temparay frame_cel for final render
@@ -190,7 +190,7 @@ Sprite load_sprite(const char* char_iter) {
       f.pixels.resize(s.h * s.w);
 
       // HACK(SMA) : assuming that these are still in reverse order.
-      for ( auto& it = cels.rbegin(); it != cels.rend(); ++it ) {
+      for ( auto it = cels.rbegin(); it != cels.rend(); ++it ) {
         const auto& cel = *it;
         // FIXME(SMA) : No support for linked layers yet.
         assert(cel.linked == 0);
@@ -235,7 +235,7 @@ Sprite load_sprite(const char* char_iter) {
     } else {
       Frame f;
       f.duration = frame.header.duration;
-      // TODO(SMA) : Save space by allowing 0 pixels in frame using 
+      // TODO(SMA) : Save space by allowing 0 pixels in frame using
       // f.link when its implemneted.
       f.pixels.resize(s.h * s.w);
       s.frames.push_back(f);
