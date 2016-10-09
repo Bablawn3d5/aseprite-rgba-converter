@@ -13,15 +13,15 @@ namespace blend {
 
 using aseprite::details::frame_cel;
 
-PIXEL_RGBA dest(const PIXEL_RGBA& bg, const PIXEL_RGBA& fg, const BYTE& opacity) { return fg; };
-PIXEL_RGBA src(const PIXEL_RGBA& bg, const PIXEL_RGBA& fg, const BYTE& opacity) { return bg; };
+PIXEL_RGBA dest(const PIXEL_RGBA& bg, const PIXEL_RGBA& fg, const BYTE& opacity) { return fg; }
+PIXEL_RGBA src(const PIXEL_RGBA& bg, const PIXEL_RGBA& fg, const BYTE& opacity) { return bg; }
 
 PIXEL_RGBA normal_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
 
   // Bitwise multiplication applicator. Makes sure if we overflow we cap out at 
   // BYTE maximum 255, or undeflow to byte minumium of 0.
   // Intentionally using integer math because decmial pixels are dumb.
-  const auto& apply = [](const BYTE& p, const float& f) -> const BYTE{
+  const auto& apply = [](const BYTE& p, const float& f) -> BYTE{
     // Assuming int is big enough to hold byte * float.
     return std::max(std::min(int(p * f), 255), 0);
   };
@@ -46,7 +46,7 @@ PIXEL_RGBA normal_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE
     static_cast<BYTE>(int(lhs.b + apply(rhs.b,dem) / alpha)),
     static_cast<BYTE>(alpha) };
   return r;
-};
+}
 
 PIXEL_RGBA multiply_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
   const PIXEL_RGBA mul_rgba {
@@ -55,7 +55,7 @@ PIXEL_RGBA multiply_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BY
     static_cast<BYTE>(rhs.b * lhs.b),
     static_cast<BYTE>(rhs.a * lhs.a) };
   return normal_blend(lhs, mul_rgba, opacity);
-};
+}
 
 PIXEL_RGBA screen_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
   const PIXEL_RGBA screen_rgba{
@@ -64,7 +64,7 @@ PIXEL_RGBA screen_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE
     static_cast<BYTE>(rhs.b + lhs.b - rhs.b * lhs.b),
     static_cast<BYTE>(rhs.a + lhs.a - rhs.a * lhs.a) };
   return normal_blend(lhs, screen_rgba, opacity);
-};
+}
 
 PIXEL_RGBA overlay_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
   const PIXEL_RGBA screen_rgba = screen_blend(lhs, rhs, opacity);
@@ -75,7 +75,7 @@ PIXEL_RGBA overlay_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYT
     static_cast<BYTE>( (rhs.b > 0x80) ? screen_rgba.b : multiply_rgba.b ),
     static_cast<BYTE>( (rhs.a > 0x80) ? screen_rgba.a : multiply_rgba.a ) };
   return normal_blend(lhs, overlay_rbga, opacity);
-};
+}
 
 PIXEL_RGBA darken_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
   const PIXEL_RGBA darken_rgba{
@@ -84,7 +84,7 @@ PIXEL_RGBA darken_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE
     static_cast<BYTE>(std::min(lhs.b, rhs.b)),
     static_cast<BYTE>(rhs.a) };
   return normal_blend(lhs, darken_rgba, opacity);
-};
+}
 
 PIXEL_RGBA lighten_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
   const PIXEL_RGBA lighten_rgba{
@@ -96,7 +96,7 @@ PIXEL_RGBA lighten_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYT
 }
 
 PIXEL_RGBA color_dodge_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity){
-  const auto& dodge = [](const BYTE& bg,const BYTE& fg) -> const BYTE {
+  const auto& dodge = [](const BYTE& bg,const BYTE& fg) -> BYTE {
     if ( bg == 0 )
       return 0;
     auto inv = 0xFF - fg;
@@ -115,7 +115,7 @@ PIXEL_RGBA color_dodge_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const
 }
 
 PIXEL_RGBA color_burn_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity){
-  const auto& burn = [](const BYTE& bg, const BYTE& fg) -> const BYTE {
+  const auto& burn = [](const BYTE& bg, const BYTE& fg) -> BYTE {
     if ( bg == 0xFF )
       return 0xFF;
     auto inv = 0xFF - bg;
@@ -136,12 +136,9 @@ PIXEL_RGBA hard_light_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const 
   return overlay_blend(lhs, rhs, opacity);
 }
 PIXEL_RGBA soft_light_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity){
-  const auto& soft = [](const BYTE& bg, const BYTE& fg) -> const BYTE {
+  const auto& soft = [](const BYTE& bg, const BYTE& fg) -> BYTE {
     const double b = bg / 255.0;
     const double s = fg / 255.0;
-    const double d = ( b <= 0.25 ) ?
-      ((16 * b - 12)*b + 4)*b :
-      std::sqrt(b);
 
     const double r = ( s <= 0.5 ) ?
       b - (1.0 - 2.0*s) * b * (1.0 - b) :
@@ -166,7 +163,7 @@ PIXEL_RGBA diffrence_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const B
   return normal_blend(lhs, diff_rgba, opacity);
 }
 PIXEL_RGBA exclusion_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity){
-  const auto& exclusion = [](const BYTE& bg, const BYTE& fg) -> const BYTE {
+  const auto& exclusion = [](const BYTE& bg, const BYTE& fg) -> BYTE {
     WORD mul = bg * fg;
     return (BYTE)(bg + fg - 2 * mul);
   };
@@ -202,8 +199,10 @@ std::vector<PIXEL_RGBA> combine_blend_cels(const frame_cel& src, const frame_cel
   for ( size_t y = 0; y < src.h; ++y ) {
     for ( size_t x = 0; x < src.w; ++x ) {
       // If we're within the offsets of dst frame, paint dst instead
-      if ( x - dst.c.x < dst.w && y - dst.c.y < dst.h &&
-          x - dst.c.x >= 0 && y - dst.c.y >= 0 ) {
+      if ( SIGNED_WORD(x - dst.c.x) < dst.w && 
+          SIGNED_WORD(y - dst.c.y) < dst.h &&
+          SIGNED_WORD(x - dst.c.x) >= 0 && 
+          SIGNED_WORD(y - dst.c.y) >= 0 ) {
         const auto& pixel = dst.pixels[(x - dst.c.x) + ((y - dst.c.y)*dst.w)];
         const auto& src_px = src.pixels[x + (y*src.w)];
         pixels[x + (y*src.w)] = blend_func(src_px, pixel, opacity);
