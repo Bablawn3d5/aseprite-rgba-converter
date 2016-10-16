@@ -11,7 +11,8 @@ namespace details {
 template<typename T>
 const char * read_object(const char * buf, T & target) {
   target = *reinterpret_cast<const T*>(buf);
-  return buf + sizeof(T);
+  auto size = sizeof(T);
+  return buf + size;
 }
 
 template

@@ -20,10 +20,12 @@ Currently a bit of a work in progress, but it's functional 'enough' to use.
 | Color Mode: Indexed |                            |
 | Pallets             |                            |
 | Transparent BG      | X                          |
-| Layers              |                            |
-| Layer-Blending      |                            |
 | Colored BG          |                            |
+| Layers              | X                          |
+| Layer-Blending      | X*                         |
 
+
+* - HSL blending not supported
 
 Example usage:
 ```

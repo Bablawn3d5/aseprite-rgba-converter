@@ -8,6 +8,7 @@
 #include "doc-lite.h"
 #include <vector>
 #include <string>
+#include <memory>
 
 #pragma pack(push)
 #pragma pack(1)
@@ -17,6 +18,8 @@ namespace details {
 static_assert(sizeof(BYTE) == 1, "Sizeof BYTE doesn't match header size of 1 bytes.");
 static_assert(sizeof(WORD) == 2, "Sizeof WORD doesn't match header size of 2 bytes.");
 static_assert(sizeof(DWORD) == 4, "Sizeof DWORD doesn't match header size of 4 bytes.");
+
+using pixel_array = std::vector<PIXEL_RGBA>;
 
 struct ase_header {
   DWORD fsize;
@@ -82,8 +85,8 @@ struct frame_cel {
   cel_header c;
   WORD w, h;
   WORD linked = 0;
-  // Assume RGBA
-  std::vector<PIXEL_RGBA> pixels;
+  // Assume RGBA, non owning pointer to layer pixels
+  pixel_array pixels;
 };
 
 struct layer_header {
@@ -99,6 +102,7 @@ struct layer_header {
 struct Layer {
   layer_header header;
   std::string name;
+  std::vector<frame_cel> frame_pixels;
 };
 
 template<typename T>

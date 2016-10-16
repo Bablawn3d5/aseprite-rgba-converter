@@ -1,4 +1,4 @@
-// Aseprite Convert to RGBA library
+ // Aseprite Convert to RGBA library
 // Copyright (c) 2016 Bablawn3d5 - <stephen.ma@bablawn.com>
 //
 // This file is released under the terms of the MIT license.
@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <memory>
 #include <functional>
 #include <algorithm>
 
@@ -105,13 +106,13 @@ Sprite load_sprite(const char* char_iter) {
   s.w = a.width;
   s.h = a.height;
   std::vector<Layer> layers;
+  // Assume RGBA for pixels
   for ( auto& frame : frames ) {
-    std::vector<frame_cel> cels;
+    std::vector<std::reference_wrapper<frame_cel>> cels;
     for ( auto& chunk : frame.chunks ) {
       auto char_iter = reinterpret_cast<const char*> (chunk.data.data());
       auto begin_ptr = char_iter;
       frame_cel frame_cel;
-      Layer layer;
       switch ( static_cast<chunk_type>(chunk.type) ) {
       case chunk_type::cel:
         char_iter = read_object(char_iter, frame_cel.c);
@@ -121,30 +122,51 @@ Sprite load_sprite(const char* char_iter) {
           char_iter = read_object(char_iter, frame_cel.h);
           frame_cel.pixels.resize(frame_cel.w * frame_cel.h);
           char_iter = read_object(char_iter, frame_cel.pixels);
+          auto& layer = layers[frame_cel.c.layer_index];
+          layer.frame_pixels.push_back(frame_cel);
+          cels.push_back(layer.frame_pixels.back());
           // Check that we've read all the data.
           assert(char_iter == begin_ptr + chunk.size);
         } else if ( frame_cel.c.cell_type == 1 ) {
           char_iter = read_object(char_iter, frame_cel.linked);
+          // Assume linked cel cannot exist before cel exists.
+          assert(layers.size() > frame_cel.c.layer_index);
+          auto& layer = layers[frame_cel.c.layer_index];
+          assert(layer.frame_pixels.size() > frame_cel.linked);
+          auto& frame_size = layer.frame_pixels[frame_cel.linked];
+          frame_cel.w = frame_size.w;
+          frame_cel.h = frame_size.h;
+          // FIXME(SMA) : Do a literal copy here, we're not too concerned about memory usage..
+          frame_cel.pixels = frame_size.pixels;
+          layer.frame_pixels.push_back(frame_cel);
+          cels.push_back(layer.frame_pixels.back());
           // Check that we've read all the data.
-          assert(char_iter == begin_ptr + chunk.size);
+          // FIXME(SMA) : For some reason the chunk.size includes a extra 
+          // DWORD and WORD here (6 bytes) wtf?
+          auto expected = begin_ptr + chunk.size - sizeof(DWORD) - sizeof(WORD);
+          assert(char_iter == expected);
         } else if ( frame_cel.c.cell_type == 2 ) {
           char_iter = read_object(char_iter, frame_cel.w);
           char_iter = read_object(char_iter, frame_cel.h);
-          frame_cel.pixels.resize(frame_cel.w * frame_cel.h);
           std::vector<BYTE> compressed;
+          // Decompress expected bytes, minus what we've read in.
           compressed.resize(chunk.size - sizeof(frame_cel.c) - sizeof(WORD) * 2);
           char_iter = read_object(char_iter, compressed);
           // Check that we've read all the data.
           assert(char_iter == begin_ptr + chunk.size);
 
           std::vector<BYTE> decompressed = decompress(compressed);
+          // Read decompressed array into pixel array
           auto pixel_iter = reinterpret_cast<const char*> (decompressed.data());
+          frame_cel.pixels.resize(frame_cel.w * frame_cel.h);
           pixel_iter = read_object(pixel_iter, frame_cel.pixels);
+          auto& layer = layers[frame_cel.c.layer_index];
+          layer.frame_pixels.push_back(frame_cel);
+          cels.push_back(layer.frame_pixels.back());
         } else {
           //Something horrible has gone wrong here.
           assert("Something horrible has happened");
         }
-        cels.push_back(frame_cel);
         break;
       case chunk_type::frame_tags:
         assert(s.tags.size() == 0);
@@ -155,9 +177,12 @@ Sprite load_sprite(const char* char_iter) {
         assert(char_iter == begin_ptr + chunk.size - sizeof(chunk.type) - sizeof(chunk.size));
         break;
       case chunk_type::layer:
-         char_iter = read_object(char_iter, layer.header);
-         char_iter = read_object(char_iter, layer.name);
-         layers.push_back(layer);
+        {
+          Layer layer;
+          char_iter = read_object(char_iter, layer.header);
+          char_iter = read_object(char_iter, layer.name);
+          layers.push_back(layer);
+        }
          break;
       case chunk_type::pallet:
       case chunk_type::old_pallet:
@@ -183,21 +208,22 @@ Sprite load_sprite(const char* char_iter) {
       c.c.y = 0;
       c.w = s.w;
       c.h = s.h;
-      c.pixels.resize(c.w * c.h);
+      c.pixels.resize(s.w*s.h);
 
       Frame f;
       f.duration = frame.header.duration;
-      f.pixels.resize(s.h * s.w);
 
       // HACK(SMA) : assuming that these are still in reverse order.
       for ( auto it = cels.rbegin(); it != cels.rend(); ++it ) {
-        const auto& cel = *it;
-        // FIXME(SMA) : No support for linked layers yet.
-        assert(cel.linked == 0);
+        const auto& cel = it->get();
         // If index is non-zero.
         if ( layers.size() > 0 ) {
           assert(cel.c.layer_index < layers.size());
           const auto& blend = layers[cel.c.layer_index];
+          // Skip layer if its set to invisible
+          if ( !(blend.header.flags & 0x1) ) {
+            continue;
+          }
           const auto& blend_func = [&blend]() -> aseprite::blend::rgba_blend_func {
             switch( blend.header.blend_mode ) {
               case 0: return aseprite::blend::normal_blend;
