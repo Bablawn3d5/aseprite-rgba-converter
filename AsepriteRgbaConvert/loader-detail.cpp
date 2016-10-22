@@ -45,10 +45,6 @@ const char* read_object(const char* buf, DWORD& target);
 template
 const char* read_object(const char* buf, LONG& target);
 
-template
-const char* read_object(const char* buf, unsigned char& target);
-
-
 template<typename CT>
 const char* read_object(const char* buf, std::vector<CT>& target) {
   size_t size = target.size();
