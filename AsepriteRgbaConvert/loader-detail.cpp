@@ -31,10 +31,23 @@ template
 const char* read_object(const char* buf, layer_header& target);
 
 template
-const char* read_object(const char* buf, unsigned int& target);
+const char* read_object(const char* buf, BYTE& target);
+
+template
+const char* read_object(const char* buf, WORD& target);
+
+template
+const char* read_object(const char* buf, SIGNED_WORD& target);
+
+template
+const char* read_object(const char* buf, DWORD& target);
+
+template
+const char* read_object(const char* buf, LONG& target);
 
 template
 const char* read_object(const char* buf, unsigned char& target);
+
 
 template<typename CT>
 const char* read_object(const char* buf, std::vector<CT>& target) {
@@ -75,7 +88,7 @@ const char* read_object(const char* buf, std::vector<Tag>& target) {
   static_assert(sizeof(header) == 10, "Sizeof tag_header doesn't match header size of 10 bytes.");
   buf = read_object(buf, header);
 
-  // HACK(SMA) : Define some inline tag here that will be converted to 
+  // HACK(SMA) : Define some inline tag here that will be converted to
   // a doc-lite Tag.
   struct t_read_struct {
     WORD from;

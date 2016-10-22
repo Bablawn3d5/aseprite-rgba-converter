@@ -124,7 +124,19 @@ extern template
 const char* read_object(const char* buf, layer_header& target);
 
 extern template
-const char* read_object(const char* buf, unsigned int& target);
+const char* read_object(const char* buf, BYTE& target);
+
+extern template
+const char* read_object(const char* buf, WORD& target);
+
+extern template
+const char* read_object(const char* buf, SIGNED_WORD& target);
+
+extern template
+const char* read_object(const char* buf, DWORD& target);
+
+extern template
+const char* read_object(const char* buf, LONG& target);
 
 extern template
 const char* read_object(const char* buf, unsigned char& target);
