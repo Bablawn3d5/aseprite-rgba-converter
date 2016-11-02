@@ -234,7 +234,7 @@ Sprite load_sprite(const char* char_iter) {
           if ( !(blend.header.flags & 0x1) ) {
             continue;
           }
-          auto& blend_func = [&blend]() -> aseprite::blend::rgba_blend_func {
+          auto blend_func = [&blend]() -> aseprite::blend::rgba_blend_func {
             switch( blend.header.blend_mode ) {
               case 0: return aseprite::blend::normal_blend;
               case 1: return aseprite::blend::multiply_blend;
