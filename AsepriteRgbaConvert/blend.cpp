@@ -193,7 +193,7 @@ PIXEL_RGBA luminosity_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const 
 
 std::vector<PIXEL_RGBA> combine_blend_cels(const frame_cel& src, const frame_cel& dst,
                                    const BYTE& opacity,
-                                   rgba_blend_func blend_func) {
+                                   rgba_blend_func& blend_func) {
   // FIXME(SMA) : Uh.. this might be a little memory inefficent, but it works.
   std::vector<PIXEL_RGBA> pixels(src.w * src.h);
   for ( size_t x = 0; x < src.w; ++x ) {

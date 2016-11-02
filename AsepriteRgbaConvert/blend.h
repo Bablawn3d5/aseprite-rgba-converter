@@ -41,7 +41,7 @@ PIXEL_RGBA luminosity_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const 
 
 std::vector<PIXEL_RGBA> combine_blend_cels(const frame_cel& src, const frame_cel& dst,
                                    const BYTE& opacity,
-                                   rgba_blend_func blend_func);
+                                   rgba_blend_func& blend_func);
 
 } // namespace asesprite::blend
 } // namespace aseprite

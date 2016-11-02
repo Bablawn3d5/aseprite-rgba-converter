@@ -106,6 +106,7 @@ Sprite load_sprite(const char* char_iter) {
   s.w = a.width;
   s.h = a.height;
   std::vector<Layer> layers;
+  size_t frame_count = 0;
   // Assume RGBA for pixels
   for ( auto& frame : frames ) {
     std::vector<std::reference_wrapper<frame_cel>> cels;
@@ -196,6 +197,15 @@ Sprite load_sprite(const char* char_iter) {
         break;
       }
     }
+    // Find all layers that had no cels added and add a blank cell.
+    frame_cel f{};
+    frame_count++;
+    for ( auto& layer : layers ) {
+      if ( layer.frame_pixels.size() != frame_count ) {
+        layer.frame_pixels.push_back(f);
+      }
+      assert( layer.frame_pixels.size() == frame_count );
+    }
 
     if ( cels.size() > 0 ) {
       assert(frame.header.duration >= 1);
@@ -224,7 +234,7 @@ Sprite load_sprite(const char* char_iter) {
           if ( !(blend.header.flags & 0x1) ) {
             continue;
           }
-          const auto& blend_func = [&blend]() -> aseprite::blend::rgba_blend_func {
+          auto& blend_func = [&blend]() -> aseprite::blend::rgba_blend_func {
             switch( blend.header.blend_mode ) {
               case 0: return aseprite::blend::normal_blend;
               case 1: return aseprite::blend::multiply_blend;
@@ -251,7 +261,7 @@ Sprite load_sprite(const char* char_iter) {
           c.pixels = combine_blend_cels(c, cel, blend.header.opacity, blend_func);
         } else {
           // Render, Final frame by blending all frames together.
-          c.pixels = combine_blend_cels(c, cel, 0xFF, aseprite::blend::dest);
+          c.pixels = combine_blend_cels(c, cel, 0xFF, aseprite::blend::rgba_blend_func(aseprite::blend::dest));
         }
       }
 
