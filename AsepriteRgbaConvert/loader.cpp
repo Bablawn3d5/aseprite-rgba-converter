@@ -142,7 +142,7 @@ Sprite load_sprite(const char* char_iter) {
           layer.frame_pixels.push_back(frame_cel);
           cels.push_back(layer.frame_pixels.back());
           // Check that we've read all the data.
-          // FIXME(SMA) : For some reason the chunk.size includes a extra 
+          // FIXME(SMA) : For some reason the chunk.size includes a extra
           // DWORD and WORD here (6 bytes) wtf?
           auto expected = begin_ptr + chunk.size - sizeof(DWORD) - sizeof(WORD);
           assert(char_iter == expected);
@@ -261,7 +261,7 @@ Sprite load_sprite(const char* char_iter) {
           c.pixels = combine_blend_cels(c, cel, blend.header.opacity, blend_func);
         } else {
           // Render, Final frame by blending all frames together.
-          c.pixels = combine_blend_cels(c, cel, 0xFF, aseprite::blend::rgba_blend_func(aseprite::blend::dest));
+          c.pixels = combine_blend_cels(c, cel, 0xFF, aseprite::blend::dest);
         }
       }
 

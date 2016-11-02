@@ -18,7 +18,7 @@ PIXEL_RGBA src(const PIXEL_RGBA& bg, const PIXEL_RGBA& fg, const BYTE& opacity) 
 
 PIXEL_RGBA normal_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE& opacity) {
 
-  // Bitwise multiplication applicator. Makes sure if we overflow we cap out at 
+  // Bitwise multiplication applicator. Makes sure if we overflow we cap out at
   // BYTE maximum 255, or undeflow to byte minumium of 0.
   // Intentionally using integer math because decmial pixels are dumb.
   const auto& apply = [](const BYTE& p, const float& f) -> BYTE{
@@ -36,7 +36,7 @@ PIXEL_RGBA normal_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const BYTE
     return PIXEL_RGBA{ 0,0,0,0 };
   }
 
-  // Calculate output alpha / 2 using int math, but cast to float for 
+  // Calculate output alpha / 2 using int math, but cast to float for
   // application math.
   const float dem = float(int(0xFF - apply((lhs.a), opacity / 255.f)));
   const int alpha = int(lhs.a + apply(rhs.a, dem));
@@ -193,15 +193,15 @@ PIXEL_RGBA luminosity_blend(const PIXEL_RGBA& lhs, const PIXEL_RGBA& rhs, const 
 
 std::vector<PIXEL_RGBA> combine_blend_cels(const frame_cel& src, const frame_cel& dst,
                                    const BYTE& opacity,
-                                   rgba_blend_func& blend_func) {
+                                   rgba_blend_func blend_func) {
   // FIXME(SMA) : Uh.. this might be a little memory inefficent, but it works.
   std::vector<PIXEL_RGBA> pixels(src.w * src.h);
   for ( size_t x = 0; x < src.w; ++x ) {
     for ( size_t y = 0; y < src.h; ++y ) {
       // If we're within the offsets of dst frame, paint dst instead
-      if ( SIGNED_WORD(x - dst.c.x) < dst.w && 
+      if ( SIGNED_WORD(x - dst.c.x) < dst.w &&
           SIGNED_WORD(y - dst.c.y) < dst.h &&
-          SIGNED_WORD(x - dst.c.x) >= 0 && 
+          SIGNED_WORD(x - dst.c.x) >= 0 &&
           SIGNED_WORD(y - dst.c.y) >= 0 ) {
         const auto& pixel = dst.pixels[(x - dst.c.x) + ((y - dst.c.y)*dst.w)];
         const auto& src_px = src.pixels[x + (y*src.w)];
